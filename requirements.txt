@@ -6,3 +6,5 @@ dotenv
 seaborn
 matplotlib
 scipy
+SQLAlchemy
+pymysql
