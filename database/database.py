@@ -18,8 +18,8 @@ db_url = (
 engine = create_engine(db_url)
 
 # Create a session
-SessionLocal = sessionmaker(bind=engine)
-db = SessionLocal()
+Session = sessionmaker(bind=engine)
+db = Session()
 
 # Create tables
 create_users = text("""

@@ -1,4 +1,5 @@
 {
     "postman.mcp.notifications.postmanMCP": true,
-    "postman.settings.dotenv-detection-notification-visibility": true
+    "postman.settings.dotenv-detection-notification-visibility": true,
+    "python-envs.pythonProjects": []
 }
