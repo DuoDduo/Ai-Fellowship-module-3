@@ -8,3 +8,5 @@ matplotlib
 scipy
 SQLAlchemy
 pymysql
+bcrypt
+scikit-learn

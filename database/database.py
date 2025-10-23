@@ -19,6 +19,7 @@ session = sessionmaker(bind=engine)
 
 db=session()
 
+# running a query to get data from our table
 query = text("select * from user")
 
 users = db.execute(query).fetchall()
