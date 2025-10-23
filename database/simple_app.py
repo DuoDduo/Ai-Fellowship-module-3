@@ -2,7 +2,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
 from sqlalchemy import text
-from database import db, engine
+from database import db,engine
 import bcrypt
 import os
 from dotenv import load_dotenv
