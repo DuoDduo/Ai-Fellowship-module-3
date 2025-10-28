@@ -8,12 +8,13 @@ import os
 from dotenv import load_dotenv
 import uvicorn
 import jwt
+from middleware import create_token
 from datetime import datetime, timedelta
 
 load_dotenv()
 
 app = FastAPI(title="Simple App", version="1.0.0")
-
+token_time=int(os.getenv("token_time"))
 
 # MODELS
 
@@ -75,11 +76,29 @@ def login(input: LoginRequest):
             raise HTTPException(status_code=401, detail="Invalid email or password")
 
         # Check password
-        stored_password = result.password  
-        if not bcrypt.checkpw(input.password.encode("utf-8"), stored_password.encode("utf-8")):
+        verified_password = result.password  
+        if not bcrypt.checkpw(input.password.encode("utf-8"), verified_password.encode("utf-8")):
             raise HTTPException(status_code=401, detail="Invalid email or password")
+        encoded_token= create_token(details={"email":result.email,"user_type": result.user_type}, expiry=token_time)
+        return {
+            "message":"Login Successful",
+            "token": encoded_token
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
 
+class courseRequest(BaseModel):
+    title:str = Field(..., example="Backend Course")
+    level: str = Field(..., example = "Beginner")
+
+@app.post("/courses")
+def addcourses(input:courseRequest):
+    try:
+        query = text("""
+                     
+                     """)
+       
+    
+    
 if __name__ == "__main__":
     uvicorn.run(app, host=os.getenv("host"), port=int(os.getenv("port")))

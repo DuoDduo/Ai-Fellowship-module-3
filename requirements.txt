@@ -10,3 +10,7 @@ SQLAlchemy
 pymysql
 bcrypt
 scikit-learn
+alembic
+jwt
+
+
