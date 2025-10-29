@@ -1,63 +1,44 @@
-# database.py
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from pymysql.constants import CLIENT
-from dotenv import load_dotenv
-import os
+class EnrollmentRequest(BaseModel):
+    course_id: int = Field(..., example=1)
 
-# Load .env variables
-load_dotenv()
 
-# Build database connection URL
-db_url = (
-    f"mysql+pymysql://{os.getenv('dbuser')}:{os.getenv('dbpassword')}"
-    f"@{os.getenv('dbhost')}:{os.getenv('dbport')}/{os.getenv('dbname')}"
-)
+@app.post("/enroll")
+def enroll_course(input: EnrollmentRequest, user_data=Depends(verify_token)):
+    try:
+        # Check if user is a student
+        if user_data['user_type'] != 'student':
+            raise HTTPException(status_code=403, detail="Only students can enroll in courses.")
 
-# Create SQLAlchemy engine
-engine = create_engine(
-    db_url,
-    connect_args={"client_flag": CLIENT.MULTI_STATEMENTS},
-    echo=False 
-)
+        # Get user_id from database
+        user_query = text("SELECT id FROM users WHERE email = :email")
+        user_result = db.execute(user_query, {"email": user_data["email"]}).fetchone()
+        if not user_result:
+            raise HTTPException(status_code=404, detail="User not found.")
+        user_id = user_result.id
 
-# Create a session
-SessionLocal = sessionmaker(bind=engine)
-db = SessionLocal()
+        # Check if course exists
+        course_query = text("SELECT id FROM courses WHERE id = :course_id")
+        course_result = db.execute(course_query, {"course_id": input.course_id}).fetchone()
+        if not course_result:
+            raise HTTPException(status_code=404, detail="Course not found.")
 
-# Create tables
-create_users = text("""
-    CREATE TABLE IF NOT EXISTS users (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        name VARCHAR(100) NOT NULL,
-        email VARCHAR(100) NOT NULL UNIQUE,
-        password VARCHAR(255) NOT NULL
-    );
-""")
+        # Check if already enrolled
+        existing_query = text("SELECT * FROM enrollments WHERE user_id = :user_id AND course_id = :course_id")
+        existing = db.execute(existing_query, {"user_id": user_id, "course_id": input.course_id}).fetchone()
+        if existing:
+            raise HTTPException(status_code=400, detail="Already enrolled in this course.")
 
-create_courses = text("""
-    CREATE TABLE IF NOT EXISTS courses (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        title VARCHAR(100) NOT NULL,
-        level VARCHAR(100) NOT NULL
-    );
-""")
+        # Enroll user
+        enroll_query = text("""
+            INSERT INTO enrollments (user_id, course_id)
+            VALUES (:user_id, :course_id)
+        """)
+        db.execute(enroll_query, {"user_id": user_id, "course_id": input.course_id})
+        db.commit()
 
-create_enrollments = text("""
-    CREATE TABLE IF NOT EXISTS enrollments (
-        id INT AUTO_INCREMENT PRIMARY KEY,
-        userId INT,
-        courseId INT,
-        FOREIGN KEY (userId) REFERENCES users(id),
-        FOREIGN KEY (courseId) REFERENCES courses(id)
-    );
-""")
+        return {"message": "Enrollment successful", "course_id": input.course_id, "user_id": user_id}
 
-# Execute setup
-db.execute(drop_query)
-db.execute(create_users)
-db.execute(create_courses)
-db.execute(create_enrollments)
-db.commit()
-
-print("Tables created successfully")
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))

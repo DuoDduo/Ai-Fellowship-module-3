@@ -20,9 +20,15 @@ depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
     """Upgrade schema."""
+    op.execute("""
+               ALTER TABLE users ADD COLUMN user_id VARCHAR(100);
+               """)
     pass
 
 
 def downgrade() -> None:
     """Downgrade schema."""
+    op.execute(""" ALTER TABLE users
+               DROP COLUMN user_type""")
     pass
+
