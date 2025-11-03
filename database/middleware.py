@@ -23,18 +23,14 @@ def create_token(details: dict, expiry: int):
     token = jwt.encode(details, secret_key, algorithm="HS256")  
     return token
 
-def verify_token(credentials: HTTPAuthorizationCredentials = Security(bearer)):
+def verify_token(request: HTTPAuthorizationCredentials = Security(bearer)):
     """
     Verify and decode JWT token.
     """
-    token = credentials.credentials
-    try:
-        decoded = jwt.decode(token, secret_key, algorithms=["HS256"])
-        return {
-            "email": decoded.get("email"),
-            "user_type": decoded.get("user_type")
-        }
-    except jwt.ExpiredSignatureError:
-        raise HTTPException(status_code=401, detail="Token expired")
-    except jwt.InvalidTokenError:
-        raise HTTPException(status_code=401, detail="Invalid token")
+    token = request.credentials
+    verified_token = jwt.decode(token, secret_key, algorithms=["HS256"])
+    return {
+        "email":  verified_token.get("email"),
+        "user_type":  verified_token.get("user_type")
+    }
+    

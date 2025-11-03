@@ -16,8 +16,8 @@ load_dotenv()
 
 app = FastAPI(title="Simple App", version="1.0.0")
 token_time=int(os.getenv("token_time"))
-# MODELS
 
+# MODELS
 class Simple(BaseModel):
     name: str = Field(..., example="Sam Larry")
     email: str = Field(..., example="sam@email.com")
@@ -32,9 +32,10 @@ class LoginRequest(BaseModel):
     
     
 class EnrollmentRequest(BaseModel):
-    course_id: int = Field(..., example=1)    
+    course_id: Optional[int] = Field(None, example=1)
+    course_title: Optional[str] = Field(None, example="Backend Course")
+       
 # SIGNUP ENDPOINT
-
 @app.post("/signup")
 def signUp(input: Simple):
     try:
@@ -87,6 +88,7 @@ def login(input: LoginRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e)) 
 
+#COURSE ENDPOINT
 class courseRequest(BaseModel):
     title:str = Field(..., example="Backend Course")
     level: str = Field(..., example = "Beginner")
@@ -108,37 +110,57 @@ def addcourses(input: courseRequest, user_data = Depends(verify_token)):
     
     except Exception as e:
        raise HTTPException(status_code=500, detail=str(e)) 
-       
+
+    
+#ENROLL ENDPOINT       
 @app.post("/enroll")
-def enroll_course(input: EnrollmentRequest, user_data=Depends(verify_token)):
+def enroll_course(input: EnrollmentRequest, user_data= Depends(verify_token)):
       try:
-        if user_data['user_type'] != 'student':
-            raise HTTPException(status_code=403, detail="Only students can enroll in courses.")
+            user_query = text("SELECT id FROM users WHERE email = :email")
+            user_result = db.execute(user_query, {"email": user_data["email"]}).fetchone()
+            
+            if not user_result:
+                raise HTTPException(status_code=404, detail="User not found.")
+            user_id = user_result.id
 
-        user_query = text("SELECT id FROM users WHERE email = :email")
-        user_result = db.execute(user_query, {"email": user_data["email"]}).fetchone()
-        if not user_result:
-            raise HTTPException(status_code=404, detail="User not found.")
-        user_id = user_result.id
+            if input.course_id:
+                course_query = text("SELECT id, title FROM courses WHERE id = :courseId")
+                course_result = db.execute(course_query, {"courseId": input.course_id}).fetchone()
+                
+            elif input.course_title:
+                course_query = text("SELECT id, title FROM courses WHERE title = :title")
+                course_result = db.execute(course_query, {"title": input.course_title}).fetchone()
+            else:
+                raise HTTPException(status_code=400, detail="Please provide either course_id or course_title.")
 
-        course_query = text("SELECT id FROM courses WHERE id = :course_id")
-        course_result = db.execute(course_query, {"course_id": input.course_id}).fetchone()
-        if not course_result:
-            raise HTTPException(status_code=404, detail="Course not found.")
+            if not course_result:
+                raise HTTPException(status_code=404, detail="Course not found.")
 
-        existing_query = text("SELECT * FROM enrollments WHERE user_id = :user_id AND course_id = :course_id")
-        existing = db.execute(existing_query, {"user_id": user_id, "course_id": input.course_id}).fetchone()
-        if existing:
-            raise HTTPException(status_code=400, detail="Already enrolled in this course.")
+            course_id = course_result.id
+            course_title = course_result.title
 
-        enroll_query = text("""
-            INSERT INTO enrollments (user_id, course_id)
-            VALUES (:user_id, :course_id)
-        """)
-        db.execute(enroll_query, {"user_id": user_id, "course_id": input.course_id})
-        db.commit()
+    
+            existing_query = text("""
+                SELECT * FROM enrollments 
+                WHERE userId = :userId AND courseId = :courseId
+            """)
+            existing = db.execute(existing_query, {"userId": user_id, "courseId": course_id}).fetchone()
 
-        return {"message": "Enrollment successful", "course_id": input.course_id, "user_id": user_id}
+            if existing:
+                raise HTTPException(status_code=400, detail=f"Already enrolled in '{course_title}'.")
+
+            enroll_query = text("""
+                INSERT INTO enrollments (userId, courseId)
+                VALUES (:userId, :courseId)
+            """)
+            db.execute(enroll_query, {"userId": user_id, "courseId": course_id})
+            db.commit()
+
+            return {
+                "message": f"Enrollment successful in '{course_title}'",
+                "userId": user_id,
+                "courseId": course_id
+            }
 
       except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
