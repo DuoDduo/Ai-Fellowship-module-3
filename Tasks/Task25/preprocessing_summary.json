@@ -1,0 +1,46 @@
+{
+  "original_shape": [
+    614,
+    13
+  ],
+  "final_shape": [
+    614,
+    22
+  ],
+  "selected_features": [
+    "Gender",
+    "Married",
+    "Dependents",
+    "Education",
+    "Self_Employed",
+    "Credit_History",
+    "Property_Area",
+    "Loan_Amount_Term_Year",
+    "Marital_status",
+    "Income_category",
+    "ApplicantIncome_log",
+    "CoapplicantIncome_log",
+    "LoanAmount_log",
+    "Total_Income_log",
+    "EMI_log"
+  ],
+  "engineered_features": [
+    "Loan_Amount_Term_Year",
+    "ApplicantIncome_log",
+    "CoapplicantIncome_log",
+    "LoanAmount_log",
+    "Total_Income_log",
+    "EMI_log"
+  ],
+  "train_samples": 675,
+  "test_samples": 169,
+  "scaling_method": "RobustScaler",
+  "outlier_treatment": "Log Transformation",
+  "log_transformed": [
+    "ApplicantIncome",
+    "CoapplicantIncome",
+    "LoanAmount",
+    "Total_Income",
+    "EMI"
+  ]
+}

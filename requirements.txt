@@ -12,5 +12,9 @@ bcrypt
 scikit-learn
 alembic
 jwt
+imbalanced-learn
+xgboost
+lightgbm
+# shap
 
 
