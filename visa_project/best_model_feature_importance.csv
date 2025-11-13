@@ -1,0 +1,19 @@
+feature,importance
+education_of_employee,0.39989683
+has_job_experience,0.21274017
+need_training_no_exp,0.07866677
+region_median_wage,0.0554815
+full_time_position,0.0436313
+age_of_estab_log,0.034915376
+continent,0.03125553
+requires_job_training,0.025637912
+yr_of_estab,0.022681009
+wage_vs_region_log,0.021791052
+annual_wage_log,0.01649934
+region_of_employment,0.014846698
+need_training_has_exp,0.014439109
+no_of_employees,0.014041682
+Unnamed: 0,0.013475707
+wage_per_hour_log,0.0
+wage_per_month_log,0.0
+wage_per_week_log,0.0
